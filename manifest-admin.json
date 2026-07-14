@@ -1,6 +1,6 @@
 {
-  "name": "Moneyfinz Admin",
-  "short_name": "MZ Admin",
+  "name": "Moneyfinz Founder",
+  "short_name": "Moneyfinz Founder",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
