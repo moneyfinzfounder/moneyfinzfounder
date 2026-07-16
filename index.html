@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Moneyfinz Founder">
+<meta name="apple-mobile-web-app-title" content="MZ Admin">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 *{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -177,7 +177,7 @@ details.raw-block .btn{margin-top:8px}
     <div class="login-wrap">
       <div class="login-card">
         <div class="login-logo">M</div>
-        <h1>Moneyfinz Founder</h1>
+        <h1>Moneyfinz Admin</h1>
         <p class="sub">Sign in with your admin account</p>
         <div class="login-err" id="login-err"></div>
         <form id="login-form" onsubmit="return false">
@@ -198,10 +198,15 @@ details.raw-block .btn{margin-top:8px}
   <div class="screen" id="screen-admin">
     <div class="topbar">
       <div>
-        <h1>Moneyfinz Founder</h1>
+        <h1>Moneyfinz Admin</h1>
         <div class="who" id="admin-who">–</div>
       </div>
-      <button class="icon-btn logout" onclick="doLogout()" title="Sign out">⏻</button>
+      <button class="icon-btn" onclick="openProfileModal()" title="Profile">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"></path>
+        </svg>
+      </button>
     </div>
 
     <div class="tab-strip">
@@ -236,7 +241,22 @@ details.raw-block .btn{margin-top:8px}
 
     </div>
   </div>
+</div>
 
+<!-- ══════ PROFILE MODAL ══════ -->
+<div class="modal-overlay" id="profile-modal" onclick="closeProfileModalBg(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>Profile</h2>
+      <button class="close-x" onclick="closeProfileModal()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;padding:6px 0 20px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;margin-bottom:12px" id="profile-avatar">–</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text)" id="profile-email">–</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Admin</div>
+    </div>
+    <button class="btn btn-danger" onclick="doLogout()">Log Out</button>
+  </div>
 </div>
 
 <!-- ══════ USER DETAIL / EDIT MODAL ══════ -->
@@ -469,8 +489,20 @@ async function doLogin(){
 }
 
 function doLogout(){
+  closeProfileModal();
   window.adminSignOut && window.adminSignOut();
 }
+
+function openProfileModal(){
+  const email = (window.__fb.currentAdmin && window.__fb.currentAdmin.email) || '';
+  document.getElementById('profile-email').textContent = email || '-';
+  document.getElementById('profile-avatar').textContent = email ? email[0].toUpperCase() : '–';
+  document.getElementById('profile-modal').classList.add('open');
+}
+function closeProfileModal(){
+  document.getElementById('profile-modal').classList.remove('open');
+}
+function closeProfileModalBg(e){ if(e.target===document.getElementById('profile-modal')) closeProfileModal(); }
 
 // ── Once the users listener fires successfully, we know this account
 // really does have admin access — show the dashboard.
