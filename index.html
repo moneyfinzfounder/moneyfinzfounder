@@ -152,6 +152,23 @@ html,body{height:100%;background:var(--bg);
 details.raw-block{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:14px}
 details.raw-block summary{font-size:13px;font-weight:700;cursor:pointer;color:var(--text-sub)}
 details.raw-block textarea{width:100%;min-height:140px;margin-top:10px;font-family:monospace;font-size:11.5px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--white)}
+
+/* ── ADMIN TXN / BUDGET LISTS ── */
+.field-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.field-head label{margin-bottom:0}
+.mini-list{background:var(--white);border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+.tx-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.tx-item:last-child{border-bottom:none}
+.tx-icon{width:38px;height:38px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-date{font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-amount{font-size:13.5px;font-weight:800;letter-spacing:-.2px;flex-shrink:0}
+.tx-amount.income{color:var(--green)}.tx-amount.expense{color:var(--red)}
+.li-menu{display:flex;flex-direction:column;gap:3px;padding:4px;cursor:pointer;flex-shrink:0}
+.li-menu i{width:4px;height:4px;background:var(--text-muted);border-radius:50%;display:block}
+.mini-empty{text-align:center;padding:24px 16px;color:var(--text-muted);font-size:12.5px}
+.item-menu-sheet{display:flex;flex-direction:column;gap:10px}
 details.raw-block .btn{margin-top:8px}
 
 .modal-actions{display:flex;gap:10px;margin-top:18px}
@@ -309,16 +326,112 @@ details.raw-block .btn{margin-top:8px}
       <button class="btn btn-primary" onclick="saveUserEdits()">Save Changes</button>
     </div>
 
-    <details class="raw-block">
-      <summary>Advanced: transactions (raw JSON)</summary>
-      <textarea id="edit-txns-json"></textarea>
-      <button class="btn btn-outline btn-sm" onclick="saveRawField('txns')">Save Transactions</button>
-    </details>
-    <details class="raw-block">
-      <summary>Advanced: budgets (raw JSON)</summary>
-      <textarea id="edit-budgets-json"></textarea>
-      <button class="btn btn-outline btn-sm" onclick="saveRawField('budgets')">Save Budgets</button>
-    </details>
+    <div class="field">
+      <div class="field-head">
+        <label>Transactions (<span id="admin-txn-count">0</span>)</label>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openAdminTxnForm()">+ Add</button>
+      </div>
+      <div class="mini-list" id="admin-txn-list"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-head">
+        <label>Budgets (<span id="admin-budget-count">0</span>)</label>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openAdminBudgetForm()">+ Add</button>
+      </div>
+      <div class="mini-list" id="admin-budget-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TXN/BUDGET ITEM ACTION SHEET ══════ -->
+<div class="modal-overlay" id="admin-item-menu-modal" onclick="closeAdminItemMenuBg(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="admin-item-menu-title">Item</h2>
+      <button class="close-x" onclick="closeAdminItemMenu()">✕</button>
+    </div>
+    <div class="item-menu-sheet">
+      <button type="button" class="btn btn-outline" onclick="editAdminItem()">✏️&nbsp;&nbsp;Edit</button>
+      <button type="button" class="btn btn-outline" style="background:var(--red-light);color:var(--red)" onclick="deleteAdminItem()">🗑️&nbsp;&nbsp;Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TXN EDIT/ADD MODAL ══════ -->
+<div class="modal-overlay" id="admin-txn-form-modal" onclick="closeAdminTxnFormBg(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="admin-txn-form-title">Add Transaction</h2>
+      <button class="close-x" onclick="closeAdminTxnForm()">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Type</label>
+      <div class="seg">
+        <button type="button" onclick="setAdminTxnType('expense')" id="admin-txn-type-exp">Expense</button>
+        <button type="button" onclick="setAdminTxnType('income')" id="admin-txn-type-inc">Income</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select class="form-input" id="admin-txn-category" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);font-size:14.5px;background:var(--bg);color:var(--text)"></select>
+    </div>
+    <div class="field">
+      <label>Amount</label>
+      <input type="number" min="0" step="0.01" id="admin-txn-amount">
+    </div>
+    <div class="field">
+      <label>Currency code</label>
+      <input type="text" id="admin-txn-currency" maxlength="3" style="text-transform:uppercase">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="admin-txn-date">
+    </div>
+    <div class="field">
+      <label>Note</label>
+      <input type="text" id="admin-txn-note" placeholder="Optional note">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAdminTxnForm()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAdminTxn()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ BUDGET EDIT/ADD MODAL ══════ -->
+<div class="modal-overlay" id="admin-budget-form-modal" onclick="closeAdminBudgetFormBg(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="admin-budget-form-title">Add Budget</h2>
+      <button class="close-x" onclick="closeAdminBudgetForm()">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Category</label>
+      <select class="form-input" id="admin-budget-category" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);font-size:14.5px;background:var(--bg);color:var(--text)"></select>
+    </div>
+    <div class="field">
+      <label>Amount</label>
+      <input type="number" min="0" step="0.01" id="admin-budget-amount">
+    </div>
+    <div class="field">
+      <label>Currency code</label>
+      <input type="text" id="admin-budget-currency" maxlength="3" style="text-transform:uppercase">
+    </div>
+    <div class="field">
+      <label>Recurrence</label>
+      <select id="admin-budget-recurrence" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);font-size:14.5px;background:var(--bg);color:var(--text)">
+        <option>Monthly</option><option>Weekly</option><option>Yearly</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAdminBudgetForm()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAdminBudget()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -424,6 +537,40 @@ let allPayments = [];
 let bootDone = false;
 let currentEditUid = null;
 let editState = { subscribed: false, pendingRequest: false };
+let editingUserTxns = [];
+let editingUserBudgets = [];
+let adminItemMenuType = null;
+let adminItemMenuId = null;
+let adminTxnEditingId = null;
+let adminBudgetEditingId = null;
+let adminTxnFormType = 'expense';
+
+const EXP_CATS = [
+  {id:'house',label:'House',         icon:'🏠'},
+  {id:'bills',label:'Bills',         icon:'📋'},
+  {id:'car',  label:'Transportation',icon:'🚗'},
+  {id:'food', label:'Food',          icon:'🍽️'},
+  {id:'save', label:'Savings',       icon:'💰'},
+  {id:'shop', label:'Shopping',      icon:'🛒'},
+  {id:'hlth', label:'Healthcare',    icon:'❤️'},
+  {id:'groc', label:'Groceries',     icon:'🛍️'},
+  {id:'fam',  label:'Family',        icon:'👨‍👩‍👧'},
+  {id:'self', label:'Personal',      icon:'😊'},
+  {id:'don',  label:'Donation',      icon:'🤲'},
+  {id:'cour', label:'Courier',       icon:'📦'},
+  {id:'mob',  label:'Mobile Recharge',icon:'📱'},
+  {id:'trv',  label:'Travel',        icon:'✈️'},
+];
+const INC_CATS = [
+  {id:'sal', label:'Salary',       icon:'💼'},
+  {id:'biz', label:'Business',     icon:'🏢'},
+  {id:'ast', label:'Asset Income', icon:'🌱'},
+  {id:'frln',label:'Freelance',    icon:'💻'},
+  {id:'rent',label:'Rental',       icon:'🏘️'},
+  {id:'inv', label:'Investment',   icon:'📈'},
+  {id:'gift',label:'Gift',         icon:'🎁'},
+  {id:'oth', label:'Other',        icon:'💵'},
+];
 
 function showToast(msg){
   const el = document.getElementById('toast');
@@ -691,8 +838,10 @@ function fillUserModal(u, resetFields){
     updateSegButtons();
     const exp = u.expiryDate ? tsToDate(u.expiryDate) : null;
     document.getElementById('edit-expiry').value = exp ? isoDateStr(exp) : '';
-    document.getElementById('edit-txns-json').value = JSON.stringify(u.txns||[], null, 2);
-    document.getElementById('edit-budgets-json').value = JSON.stringify(u.budgets||[], null, 2);
+    editingUserTxns = Array.isArray(u.txns) ? JSON.parse(JSON.stringify(u.txns)) : [];
+    editingUserBudgets = Array.isArray(u.budgets) ? JSON.parse(JSON.stringify(u.budgets)) : [];
+    renderAdminTxnList();
+    renderAdminBudgetList();
   }
 }
 
@@ -732,20 +881,204 @@ async function saveUserEdits(){
   }
 }
 
-async function saveRawField(field){
+// ── ADMIN TXN LIST ──
+function renderAdminTxnList(){
+  document.getElementById('admin-txn-count').textContent = editingUserTxns.length;
+  const wrap = document.getElementById('admin-txn-list');
+  if(!editingUserTxns.length){ wrap.innerHTML = '<div class="mini-empty">No transactions yet</div>'; return; }
+  const sorted = [...editingUserTxns].sort((a,b)=> new Date(b.date)-new Date(a.date) || (b.id||0)-(a.id||0));
+  wrap.innerHTML = sorted.map(t=>{
+    const sign = t.type==='expense' ? '-' : '+';
+    const d = t.date ? new Date(t.date) : null;
+    const ds = (d && !isNaN(d.getTime())) ? fmtDate(d) : '-';
+    const amt = t.amount!=null ? Number(t.amount).toFixed(2) : '0.00';
+    return `
+    <div class="tx-item">
+      <div class="tx-icon">${t.icon||'💰'}</div>
+      <div class="tx-info">
+        <div class="tx-name">${escapeHtml(t.category||'-')}</div>
+        <div class="tx-date">${ds}${t.note?' · '+escapeHtml(t.note):''}${t.currency&&t.currency!=='USD'?' · '+escapeHtml(t.currency):''}</div>
+      </div>
+      <div class="tx-amount ${t.type}">${sign}${amt}</div>
+      <div class="li-menu" onclick="openAdminItemMenu(event,'txn',${t.id})"><i></i><i></i><i></i></div>
+    </div>`;
+  }).join('');
+}
+
+// ── ADMIN BUDGET LIST ──
+function renderAdminBudgetList(){
+  document.getElementById('admin-budget-count').textContent = editingUserBudgets.length;
+  const wrap = document.getElementById('admin-budget-list');
+  if(!editingUserBudgets.length){ wrap.innerHTML = '<div class="mini-empty">No budgets set</div>'; return; }
+  wrap.innerHTML = editingUserBudgets.map(b=>{
+    const amt = b.amount!=null ? Number(b.amount).toFixed(2) : '0.00';
+    return `
+    <div class="tx-item">
+      <div class="tx-icon">${b.icon||'📋'}</div>
+      <div class="tx-info">
+        <div class="tx-name">${escapeHtml(b.category||'-')}</div>
+        <div class="tx-date">${escapeHtml(b.recurrence||'Monthly')}${b.currency&&b.currency!=='USD'?' · '+escapeHtml(b.currency):''}</div>
+      </div>
+      <div class="tx-amount">${amt}</div>
+      <div class="li-menu" onclick="openAdminItemMenu(event,'budget',${b.id})"><i></i><i></i><i></i></div>
+    </div>`;
+  }).join('');
+}
+
+// ── ITEM ACTION SHEET (3-dot menu, shared by txns & budgets) ──
+function openAdminItemMenu(e, type, id){
+  e.stopPropagation();
+  adminItemMenuType = type;
+  adminItemMenuId = id;
+  document.getElementById('admin-item-menu-title').textContent = type==='txn' ? 'Transaction' : 'Budget';
+  document.getElementById('admin-item-menu-modal').classList.add('open');
+}
+function closeAdminItemMenu(){
+  document.getElementById('admin-item-menu-modal').classList.remove('open');
+}
+function closeAdminItemMenuBg(e){ if(e.target===document.getElementById('admin-item-menu-modal')) closeAdminItemMenu(); }
+
+function editAdminItem(){
+  const type = adminItemMenuType, id = adminItemMenuId;
+  closeAdminItemMenu();
+  if(type==='txn') openAdminTxnForm(id);
+  else if(type==='budget') openAdminBudgetForm(id);
+}
+
+async function deleteAdminItem(){
+  const type = adminItemMenuType, id = adminItemMenuId;
+  closeAdminItemMenu();
   if(!currentEditUid) return;
-  const ta = document.getElementById(field==='txns' ? 'edit-txns-json' : 'edit-budgets-json');
-  let parsed;
   try{
-    parsed = JSON.parse(ta.value);
-    if(!Array.isArray(parsed)) throw new Error('Must be a JSON array');
+    if(type==='txn'){
+      editingUserTxns = editingUserTxns.filter(t=>t.id!==id);
+      await window.adminUpdateUser(currentEditUid, { txns: editingUserTxns });
+      renderAdminTxnList();
+      showToast('🗑️ Transaction deleted');
+    } else if(type==='budget'){
+      editingUserBudgets = editingUserBudgets.filter(b=>b.id!==id);
+      await window.adminUpdateUser(currentEditUid, { budgets: editingUserBudgets });
+      renderAdminBudgetList();
+      showToast('🗑️ Budget deleted');
+    }
   }catch(e){
-    showToast('⚠️ Invalid JSON: '+e.message);
-    return;
+    showToast('⚠️ Could not delete: '+e.message);
+  }
+}
+
+// ── TXN ADD/EDIT FORM ──
+function todayStrAdmin(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function setAdminTxnType(type){
+  adminTxnFormType = type;
+  document.getElementById('admin-txn-type-exp').className = type==='expense' ? 'active on' : '';
+  document.getElementById('admin-txn-type-inc').className = type==='income' ? 'active on' : '';
+  populateAdminTxnCategorySelect();
+}
+function populateAdminTxnCategorySelect(selectedLabel){
+  const cats = adminTxnFormType==='income' ? INC_CATS : EXP_CATS;
+  const sel = document.getElementById('admin-txn-category');
+  sel.innerHTML = cats.map(c=>`<option value="${c.id}" data-icon="${c.icon}" data-label="${escapeHtml(c.label)}">${c.icon} ${c.label}</option>`).join('');
+  if(selectedLabel){
+    const match = [...sel.options].find(o=>o.dataset.label===selectedLabel);
+    if(match) sel.value = match.value;
+  }
+}
+function openAdminTxnForm(id){
+  const isEdit = id!=null;
+  adminTxnEditingId = isEdit ? id : null;
+  document.getElementById('admin-txn-form-title').textContent = isEdit ? 'Edit Transaction' : 'Add Transaction';
+  const t = isEdit ? editingUserTxns.find(x=>x.id===id) : null;
+  adminTxnFormType = t ? t.type : 'expense';
+  document.getElementById('admin-txn-type-exp').className = adminTxnFormType==='expense' ? 'active on' : '';
+  document.getElementById('admin-txn-type-inc').className = adminTxnFormType==='income' ? 'active on' : '';
+  populateAdminTxnCategorySelect(t ? t.category : null);
+  document.getElementById('admin-txn-amount').value = t ? t.amount : '';
+  document.getElementById('admin-txn-currency').value = t ? (t.currency||'USD') : 'USD';
+  document.getElementById('admin-txn-date').value = t ? t.date : todayStrAdmin();
+  document.getElementById('admin-txn-note').value = t ? (t.note||'') : '';
+  document.getElementById('admin-txn-form-modal').classList.add('open');
+}
+function closeAdminTxnForm(){ document.getElementById('admin-txn-form-modal').classList.remove('open'); }
+function closeAdminTxnFormBg(e){ if(e.target===document.getElementById('admin-txn-form-modal')) closeAdminTxnForm(); }
+
+async function saveAdminTxn(){
+  if(!currentEditUid) return;
+  const catSel = document.getElementById('admin-txn-category');
+  const opt = catSel.options[catSel.selectedIndex];
+  if(!opt){ showToast('⚠️ Select a category'); return; }
+  const category = opt.dataset.label;
+  const icon = opt.dataset.icon;
+  const amount = parseFloat(document.getElementById('admin-txn-amount').value);
+  if(!amount || amount<=0){ showToast('⚠️ Enter a valid amount'); return; }
+  const currency = document.getElementById('admin-txn-currency').value.trim().toUpperCase() || 'USD';
+  const date = document.getElementById('admin-txn-date').value || todayStrAdmin();
+  const note = document.getElementById('admin-txn-note').value.trim();
+  if(adminTxnEditingId!=null){
+    const t = editingUserTxns.find(x=>x.id===adminTxnEditingId);
+    if(t){ t.type=adminTxnFormType; t.category=category; t.icon=icon; t.amount=amount; t.currency=currency; t.date=date; t.note=note; }
+  } else {
+    editingUserTxns.push({ id: Date.now(), type: adminTxnFormType, category, icon, amount, currency, date, note });
   }
   try{
-    await window.adminUpdateUser(currentEditUid, { [field]: parsed });
-    showToast('✅ '+(field==='txns'?'Transactions':'Budgets')+' saved');
+    await window.adminUpdateUser(currentEditUid, { txns: editingUserTxns });
+    renderAdminTxnList();
+    closeAdminTxnForm();
+    showToast(adminTxnEditingId!=null ? '✅ Transaction updated' : '✅ Transaction added');
+  }catch(e){
+    showToast('⚠️ Could not save: '+e.message);
+  }
+}
+
+// ── BUDGET ADD/EDIT FORM ──
+function populateAdminBudgetCategorySelect(selectedLabel){
+  const sel = document.getElementById('admin-budget-category');
+  sel.innerHTML = EXP_CATS.map(c=>`<option value="${c.id}" data-icon="${c.icon}" data-label="${escapeHtml(c.label)}">${c.icon} ${c.label}</option>`).join('');
+  if(selectedLabel){
+    const match = [...sel.options].find(o=>o.dataset.label===selectedLabel);
+    if(match) sel.value = match.value;
+  }
+}
+function openAdminBudgetForm(id){
+  const isEdit = id!=null;
+  adminBudgetEditingId = isEdit ? id : null;
+  document.getElementById('admin-budget-form-title').textContent = isEdit ? 'Edit Budget' : 'Add Budget';
+  const b = isEdit ? editingUserBudgets.find(x=>x.id===id) : null;
+  populateAdminBudgetCategorySelect(b ? b.category : null);
+  document.getElementById('admin-budget-amount').value = b ? b.amount : '';
+  document.getElementById('admin-budget-currency').value = b ? (b.currency||'USD') : 'USD';
+  document.getElementById('admin-budget-recurrence').value = b ? (b.recurrence||'Monthly') : 'Monthly';
+  document.getElementById('admin-budget-form-modal').classList.add('open');
+}
+function closeAdminBudgetForm(){ document.getElementById('admin-budget-form-modal').classList.remove('open'); }
+function closeAdminBudgetFormBg(e){ if(e.target===document.getElementById('admin-budget-form-modal')) closeAdminBudgetForm(); }
+
+async function saveAdminBudget(){
+  if(!currentEditUid) return;
+  const catSel = document.getElementById('admin-budget-category');
+  const opt = catSel.options[catSel.selectedIndex];
+  if(!opt){ showToast('⚠️ Select a category'); return; }
+  const category = opt.dataset.label;
+  const icon = opt.dataset.icon;
+  const amount = parseFloat(document.getElementById('admin-budget-amount').value);
+  if(!amount || amount<=0){ showToast('⚠️ Enter a valid amount'); return; }
+  const currency = document.getElementById('admin-budget-currency').value.trim().toUpperCase() || 'USD';
+  const recurrence = document.getElementById('admin-budget-recurrence').value;
+  if(adminBudgetEditingId!=null){
+    const b = editingUserBudgets.find(x=>x.id===adminBudgetEditingId);
+    if(b){ b.category=category; b.icon=icon; b.amount=amount; b.currency=currency; b.recurrence=recurrence; }
+  } else {
+    editingUserBudgets = editingUserBudgets.filter(b=>b.category!==category);
+    editingUserBudgets.push({ id: Date.now(), category, icon, amount, currency, recurrence });
+  }
+  try{
+    await window.adminUpdateUser(currentEditUid, { budgets: editingUserBudgets });
+    renderAdminBudgetList();
+    closeAdminBudgetForm();
+    showToast(adminBudgetEditingId!=null ? '✅ Budget updated' : '✅ Budget set');
   }catch(e){
     showToast('⚠️ Could not save: '+e.message);
   }
