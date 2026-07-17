@@ -763,7 +763,8 @@ function renderPayments(){
       <div class="row1">
         <div>
           <div class="email">${escapeHtml(p.email||'-')}</div>
-          <div class="meta">Amount: ${p.amount!=null?p.amount:'-'} · ${fmtDate(tsToDate(p.createdAt))}</div>
+          <div class="meta">Amount: ${p.amount!=null?p.amount:'-'}</div>
+          <div class="meta">🕒 ${fmtDateTime(tsToDate(p.createdAt))}</div>
         </div>
       </div>
       <div class="trx">TrxID: ${escapeHtml(p.trxId||'-')}</div>
@@ -1093,6 +1094,12 @@ function isoDateStr(d){
 function fmtDate(d){
   if(!d || isNaN(d.getTime())) return '-';
   return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function fmtDateTime(d){
+  if(!d || isNaN(d.getTime())) return '-';
+  const datePart = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const timePart = d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+  return `${datePart}, ${timePart}`;
 }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
