@@ -764,7 +764,7 @@ function renderPayments(){
         <div>
           <div class="email">${escapeHtml(p.email||'-')}</div>
           <div class="meta">Amount: ${p.amount!=null?p.amount:'-'}</div>
-          <div class="meta">🕒 ${fmtDateTime(tsToDate(p.createdAt))}</div>
+          <div class="meta">${fmtDateTime(tsToDate(p.createdAt))}</div>
         </div>
       </div>
       <div class="trx">${escapeHtml(p.trxId||'-')}</div>
