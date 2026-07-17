@@ -767,7 +767,7 @@ function renderPayments(){
           <div class="meta">🕒 ${fmtDateTime(tsToDate(p.createdAt))}</div>
         </div>
       </div>
-      <div class="trx">TrxID: ${escapeHtml(p.trxId||'-')}</div>
+      <div class="trx">${escapeHtml(p.trxId||'-')}</div>
       <div class="approve-days">
         <span>Grant</span>
         <input type="number" min="1" value="30" id="days-${p.id}">
